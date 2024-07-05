@@ -82,6 +82,33 @@ async def enter_text(message: Message, state: FSMContext):
     await message.answer('Запомню, у сообщения есть еще какие-то признаки?', reply_markup=filters_kb)
 
 
+@dp.message(Form.enter_username)
+async def enter_username(message: Message, state: FSMContext):
+    user = User.get_or_none(username=message.text)
+    if not user:
+        await state.update_data(enter_username=message.text)
+        await message.answer(f'Сообщение было отправлено пользователем{user.first_name} {user.last_name}')
+    else:
+        await message.answer('У меня нет сохранений от этого пользователя')
+    await state.set_state(Form.enter_values)
+
+
+@dp.message(Form.enter_date)
+async def enter_date(message: Message, state: FSMContext):
+    pass
+
+
+@dp.message(Form.enter_hashtags)
+async def  enter_hashtags(message: Message, state: FSMContext):
+    hashtags = message.text.split(', ', ' ')
+    valid_hashtags:tp.List[str]  = []
+    for hashtag in hashtags:
+        if all(i.isalpha() or i == '_' for i in hashtag) and hashtag[0] == '#':
+            valid_hashtags.append(hashtag)
+
+    await state.update_data(enter_hashtags=valid_hashtags)
+    await state.set_state(Form.enter_values)
+    await message.answer('Хештеги записаны')
 @dp.message()
 async def foo(message: Message):
     user = await User.get_or_create(first_name=message.from_user.first_name, last_name=message.from_user.last_name)
