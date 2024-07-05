@@ -2,9 +2,9 @@ from aiogram.fsm.state import StatesGroup, State
 
 
 class Form(StatesGroup):
-    start = State()
+    enter_chat = State()
     enter_values = State()
-    set_bool_params = State()
+    boolean_params = State()
     end = State()
 
     enter_text = State()
@@ -12,7 +12,11 @@ class Form(StatesGroup):
     enter_date = State()
     enter_hashtags = State()
 
-    boolean_params = State()
+    with_file = State()
+    with_link = State()
+    with_image = State()
+
+
 
 
 
