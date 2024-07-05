@@ -30,9 +30,6 @@ async def listen_filters(message: Message, state: FSMContext):
     await message.answer('В каком чате оно было отправлено?', reply_markup=select_chat_kb)
 
 
-@dp.message(F.text == '...')
-async def show_more_filters(message: Message):
-    await message.answer('Дополнительные фильтры', reply_markup=additional_filters)
 @dp.message(Form.boolean_params)
 async def show_more_filters(message: Message, state: FSMContext):
     message_state_dict = {
@@ -59,18 +56,20 @@ async def set_chat(message: Message, state: FSMContext):
         await message.answer('Я есть в этом чате, применить фильтры?', reply_markup=filters_kb)
 
 
+
 @dp.message(Form.enter_values)
 async def set_params(message: Message, state: FSMContext):
     message_state_dict = {
-        'текст': (Form.enter_text, 'Какой текст должено содержать искомое сообщение?'),
-        'пользователь': (Form.enter_username, 'Кто отправлял это сообщение?'),
-        'даты': (Form.enter_date, 'В какой промежуток времени оно было отправлено?'),
-        'хештеги': (Form.enter_hashtags, 'Какие хештеги были прикреплены к сообщению')
+        'текст': (Form.enter_text, 'Какой текст должено содержать искомое сообщение?', filters_kb),
+        'пользователь': (Form.enter_username, 'Кто отправлял это сообщение?', filters_kb),
+        'даты': (Form.enter_date, 'В какой промежуток времени оно было отправлено?', filters_kb),
+        'хештеги': (Form.enter_hashtags, 'Какие хештеги были прикреплены к сообщению?', filters_kb),
+        '...': (Form.boolean_params, 'У сообщения есть дополнительные признаки?', additional_filters)
     }
-    next_state = message_state_dict.get(message.text, None)
+    next_state = message_state_dict.get(message.text.lower(), None)
     if not next_state:
         await state.set_state(next_state[0])
-        await message.answer(next_state[1], reply_markup=filters_kb)
+        await message.answer(next_state[1], reply_markup=next_state[2])
     else:
         await state.set_state(Form.enter_values)
         await message.answer('Нажми на кнопки', reply_markup=filters_kb)
