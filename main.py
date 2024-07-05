@@ -26,7 +26,7 @@ async def start(message: Message):
 
 @dp.message(F.text.lower() == 'найти')
 async def listen_filters(message: Message, state: FSMContext):
-    await state.set_state(Form.start)
+    await state.set_state(Form.enter_chat)
     await message.answer('В каком чате оно было отправлено?', reply_markup=select_chat_kb)
 
 
@@ -46,10 +46,17 @@ async def show_more_filters(message: Message, state: FSMContext):
         message.answer()
 
 
-@dp.message(Form.start)
+@dp.message(Form.enter_chat)
 async def set_chat(message: Message, state: FSMContext):
-    chat_id = message.chat_shared
-    # найти чат в базе данных, если его нет, то отказать в поиске
+    chat_id = message.chat_shared.chat_id
+    chat = await Chat.get_or_none(chat_id=chat_id)
+    if chat is None:
+        await state.set_state(Form.enter_chat)
+        await message.answer('Меня еще не добавили в этот чат', reply_markup=select_chat_kb)
+    else:
+        await state.update_data(enter_chat=chat_id)
+        await state.set_state(Form.enter_values)
+        await message.answer('Я есть в этом чате, применить фильтры?', reply_markup=filters_kb)
 
 
 @dp.message(Form.enter_values)
