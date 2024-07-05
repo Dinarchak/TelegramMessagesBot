@@ -33,6 +33,17 @@ async def listen_filters(message: Message, state: FSMContext):
 @dp.message(F.text == '...')
 async def show_more_filters(message: Message):
     await message.answer('Дополнительные фильтры', reply_markup=additional_filters)
+@dp.message(Form.boolean_params)
+async def show_more_filters(message: Message, state: FSMContext):
+    message_state_dict = {
+        'файл': (Form.with_file, lambda state, value: state.update_data(with_file=value)),
+        'изображение': (Form.with_image, lambda state, value: state.update_data(with_image=value)),
+        'ссылка': (Form.with_link, lambda state, value: state.update_data(with_link=value))
+    }
+    filter = message_state_dict.get(message.text.lower(), None)
+    if filter:
+        filter[1](state=state, value=True)
+        message.answer()
 
 
 @dp.message(Form.start)
