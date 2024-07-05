@@ -14,6 +14,7 @@ from keyboards import start_kb, filters_kb, additional_filters, select_chat_kb
 from states import Form
 
 import asyncio
+import typing as tp
 
 bot = Bot(token=config['token'])
 dp = Dispatcher()
@@ -118,8 +119,13 @@ async def my_chat_member_handler(chat_member:ChatMemberUpdated):
 
 @dp.message()
 async def foo(message: Message):
-    user = await User.get_or_create(first_name=message.from_user.first_name, last_name=message.from_user.last_name)
-    await Message.create(sender=user[0], text=message.text, date=message.date)
+    if message.text is not None:
+        user = await User.get_or_create(first_name=message.from_user.first_name,
+                                        last_name=message.from_user.last_name,
+                                        user_id=message.from_user.id,
+                                        username=message.from_user.username)
+        await Message.create(sender=user[0], text=message.text, date=message.date)
+        await message.answer(message.text)
 
 
 async def main():
