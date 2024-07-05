@@ -10,5 +10,12 @@ class Message(Model):
 
 class User(Model):
     id = fields.IntField(primary_key=True)
+    user_id = fields.IntField(unique=True)
     first_name = fields.CharField(max_length=255)
     last_name = fields.CharField(max_length=255)
+    username = fields.CharField(max_length=255)
+
+
+class Chat(Model):
+    id = fields.IntField(primary_key=True)
+    chat_id = fields.IntField(unique=True)
