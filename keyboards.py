@@ -1,4 +1,7 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton,  KeyboardButtonRequestChat
+from aiogram.types import (
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    KeyboardButtonRequestChat)
 
 start_kb = ReplyKeyboardMarkup(
     keyboard=[
