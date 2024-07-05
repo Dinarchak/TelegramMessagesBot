@@ -20,7 +20,7 @@ async def main():
             modules={'user': ['models']}
             )
 
-    # await Tortoise.generate_schemas()
+    await Tortoise.generate_schemas()
 
     # удалить вебхуки и перейти на пулинг и общение с пользователем через getUpdates
     await bot.delete_webhook(drop_pending_updates=True)

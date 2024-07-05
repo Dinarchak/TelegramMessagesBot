@@ -8,6 +8,7 @@ from states import Form
 import keyboards as kb
 
 import typing as tp
+import time
 
 search_router = Router(name='search_filters')
 
@@ -39,14 +40,17 @@ async def my_chat_member_handler(chat_member: atp.ChatMemberUpdated):
 @search_router.message(Form.enter_values)
 async def set_params(message: atp.Message, state: FSMContext):
     message_state_dict = {
-        'текст': (Form.enter_text, 'Какой текст должено содержать искомое сообщение?', kb.filters_kb),
-        'пользователь': (Form.enter_username, 'Кто отправлял это сообщение?', kb.filters_kb),
-        'даты': (Form.enter_date, 'В какой промежуток времени оно было отправлено?', kb.filters_kb),
-        'хештеги': (Form.enter_hashtags, 'Какие хештеги были прикреплены к сообщению?', kb.filters_kb),
+        'текст': (Form.enter_text, 'Какой текст должено содержать искомое сообщение?', kb.filters),
+        'пользователь': (Form.enter_username, 'Кто отправлял это сообщение?', kb.filters),
+        'даты': (Form.enter_date,
+                 'В какой промежуток времени оно было отправлено? Введите сообщение в формате от ... до ...'\
+                 ', а вместо троиточий укажите желаемое время с точностью до часа',
+                 kb.filters),
+        'хештеги': (Form.enter_hashtags, 'Какие хештеги были прикреплены к сообщению?', kb.filters),
         '...': (Form.boolean_params, 'У сообщения есть дополнительные признаки?', kb.additional_filters)
     }
     next_state = message_state_dict.get(message.text.lower(), None)
-    if not next_state:
+    if next_state:
         await state.set_state(next_state[0])
         await message.answer(next_state[1], reply_markup=next_state[2])
     else:
@@ -56,10 +60,10 @@ async def set_params(message: atp.Message, state: FSMContext):
 
 @search_router.message(Form.enter_username)
 async def enter_username(message: atp.Message, state: FSMContext):
-    user = User.get_or_none(username=message.text)
+    user = await User.get_or_none(username=message.text[1:])
     if user:
-        await state.update_data(enter_username=message.text)
-        await message.answer(f'Сообщение было отправлено пользователем{user.first_name} {user.last_name}')
+        await state.update_data(enter_username=message.text[1:])
+        await message.answer(f'Сообщение было отправлено пользователем {user.first_name} {user.last_name}')
     else:
         await message.answer('У меня нет сохранений от этого пользователя')
     await state.set_state(Form.enter_values)
@@ -67,13 +71,28 @@ async def enter_username(message: atp.Message, state: FSMContext):
 
 @search_router.message(Form.enter_date)
 async def enter_date(message: atp.Message, state: FSMContext):
-    pass
+    times: tp.List[str] = message.text.replace(' ', '')[2:].split('до')
+
+    if len(times) != 2:
+        await message.answer('Неверный формат сообщения')
+        await state.set_state(Form.enter_date)
+        return
+
+    try:
+        time_after = time.strptime(times[0], '%d.%m.%Y')
+        time_before = time.strptime(times[1], '%d.%m.%Y')
+    except:
+        await message.answer('Неверный формат сообщения')
+        await state.set_state(Form.enter_date)
+        return
+
+    await state.update_data(enter_date=(time_after, time_before))
 
 
 @search_router.message(Form.enter_hashtags)
-async def  enter_hashtags(message: atp.Message, state: FSMContext):
-    hashtags = message.text.split(', ', ' ')
-    valid_hashtags:tp.List[str]  = []
+async def enter_hashtags(message: atp.Message, state: FSMContext):
+    hashtags = message.text.split(' ')
+    valid_hashtags: tp.List[str] = []
     for hashtag in hashtags:
         if all(i.isalpha() or i == '_' for i in hashtag) and hashtag[0] == '#':
             valid_hashtags.append(hashtag)

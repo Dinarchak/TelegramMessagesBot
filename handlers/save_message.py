@@ -13,4 +13,4 @@ async def foo(message: atp.Message):
                                         user_id=message.from_user.id,
                                         username=message.from_user.username)
         await Message.create(sender=user[0], text=message.text, date=message.date)
-#        await message.answer(message.text)
+        await message.answer(message.text)
