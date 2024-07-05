@@ -1,6 +1,9 @@
 from aiogram import Bot, Dispatcher, F
-from aiogram.filters import Command, CommandStart
-from aiogram.types import Message
+from aiogram.filters import (CommandStart,
+                             ChatMemberUpdatedFilter,
+                             IS_NOT_MEMBER,
+                             IS_MEMBER)
+from aiogram.types import Message, ChatMemberUpdated
 from aiogram.fsm.context import FSMContext
 
 from tortoise import Tortoise
