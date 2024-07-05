@@ -108,6 +108,14 @@ async def  enter_hashtags(message: Message, state: FSMContext):
     await state.update_data(enter_hashtags=valid_hashtags)
     await state.set_state(Form.enter_values)
     await message.answer('Хештеги записаны')
+
+
+
+@dp.my_chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
+async def my_chat_member_handler(chat_member:ChatMemberUpdated):
+    await Chat.create(chat_id=chat_member.chat.id)
+
+
 @dp.message()
 async def foo(message: Message):
     user = await User.get_or_create(first_name=message.from_user.first_name, last_name=message.from_user.last_name)
