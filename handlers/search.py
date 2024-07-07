@@ -7,7 +7,6 @@ from models import Chat, User
 from states import Form
 import keyboards as kb
 
-import typing as tp
 import time
 
 search_router = Router(name='search_filters')
@@ -59,12 +58,13 @@ async def set_params(message: atp.Message, state: FSMContext):
         'текст': (Form.enter_text, 'Какой текст должено содержать искомое сообщение?', kb.filters),
         'пользователь': (Form.enter_username, 'Кто отправлял это сообщение?', kb.filters),
         'даты': (Form.enter_date,
-                 'В какой промежуток времени оно было отправлено? Введите сообщение в формате от ... до ...'\
+                 'В какой промежуток времени оно было отправлено? Введите сообщение в формате от ... до ...' \
                  ', а вместо троиточий укажите желаемое время с точностью до часа',
                  kb.filters),
         'хештеги': (Form.enter_hashtags, 'Какие хештеги были прикреплены к сообщению?', kb.filters),
-        '...': (Form.boolean_params, 'У сообщения есть дополнительные признаки?', kb.additional_filters)
+        '...': (Form.boolean_params, 'У сообщения есть дополнительные признаки?', kb.additional_filters),
     }
+
     next_state = message_state_dict.get(message.text.lower(), None)
     if next_state:
         await state.set_state(next_state[0])
@@ -79,9 +79,10 @@ async def enter_username(message: atp.Message, state: FSMContext):
     user = await User.get_or_none(username=message.text[1:])
     if user:
         await state.update_data(enter_username=message.text[1:])
-        await message.answer(f'Сообщение было отправлено пользователем {user.first_name} {user.last_name}')
+        await message.answer(f'Сообщение было отправлено пользователем {user.first_name} {user.last_name}',
+                             reply_markup=kb.filters)
     else:
-        await message.answer('У меня нет сохранений от этого пользователя')
+        await message.answer('У меня нет сохранений от этого пользователя', reply_markup=kb.filters)
     await state.set_state(Form.enter_values)
 
 
@@ -112,31 +113,35 @@ async def enter_date(message: atp.Message, state: FSMContext):
 
 @search_router.message(Form.enter_hashtags)
 async def enter_hashtags(message: atp.Message, state: FSMContext):
-    hashtags = message.text.split(' ')
-    valid_hashtags: tp.List[str] = []
-    for hashtag in hashtags:
-        if all(i.isalpha() or i == '_' for i in hashtag) and hashtag[0] == '#':
-            valid_hashtags.append(hashtag)
+    hashtags = message.text.replace(' ', '').split('#')
 
-    await state.update_data(enter_hashtags=valid_hashtags)
+    await state.update_data(enter_hashtags=hashtags[1:])
     await state.set_state(Form.enter_values)
-    await message.answer('Хештеги записаны')
+    await message.answer('Хештеги записаны', reply_markup=kb.filters)
 
 
 @search_router.message(Form.enter_text)
 async def enter_text(message: atp.Message, state: FSMContext):
     await state.set_state(Form.enter_values)
+    await state.update_data(enter_text=message.text)
     await message.answer('Запомню, у сообщения есть еще какие-то признаки?', reply_markup=kb.filters)
 
 
 @search_router.message(Form.boolean_params)
 async def show_more_filters(message: atp.Message, state: FSMContext):
     message_state_dict = {
-        'файл': (Form.with_file, lambda state_, value: state_.update_data(with_file=value)),
-        'изображение': (Form.with_image, lambda state_, value: state_.update_data(with_image=value)),
-        'ссылка': (Form.with_link, lambda state_, value: state_.update_data(with_link=value))
+        'файл': (Form.with_file,
+                 lambda state_, value: state_.update_data(with_file=value),
+                 'К сообщению прикреплен файл'),
+        'изображение': (Form.with_image,
+                        lambda state_, value: state_.update_data(with_image=value),
+                        'К сообщение прикреплено изображение'),
+        'ссылка': (Form.with_link,
+                   lambda state_, value: state_.update_data(with_link=value),
+                   'В сообщении есть ссылка'),
     }
-    filter = message_state_dict.get(message.text.lower(), None)
-    if filter:
-        filter[1](state_=state, value=True)
-        message.answer()
+
+    bool_filter = message_state_dict.get(message.text.lower(), None)
+    if bool_filter:
+        bool_filter[1](state_=state, value=True)
+        await message.answer(bool_filter[2], reply_markup=kb.additional_filters)
