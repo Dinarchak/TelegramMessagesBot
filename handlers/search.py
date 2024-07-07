@@ -87,22 +87,27 @@ async def enter_username(message: atp.Message, state: FSMContext):
 
 @search_router.message(Form.enter_date)
 async def enter_date(message: atp.Message, state: FSMContext):
-    times: tp.List[str] = message.text.replace(' ', '')[2:].split('до')
+    text = message.text.replace(' ', '')
+    a, b = text.find('от'), text.find('до')
+    if b == -1:
+        b = len(text)
 
-    if len(times) != 2:
-        await message.answer('Неверный формат сообщения')
-        await state.set_state(Form.enter_date)
-        return
-
+    time1, time2 = text[a + 3: b], text[b + 3:]
+    time_after = time_before = None
+    print(time1, time2, len(time1), len(time2))
     try:
-        time_after = time.strptime(times[0], '%d.%m.%Y')
-        time_before = time.strptime(times[1], '%d.%m.%Y')
+        if len(time1) > 0:
+            time_after = time.strptime(time1, '%d.%m.%Y')
+        if len(time2) > 0:
+            time_before = time.strptime(time2, '%d.%m.%Y')
     except:
         await message.answer('Неверный формат сообщения')
         await state.set_state(Form.enter_date)
         return
 
     await state.update_data(enter_date=(time_after, time_before))
+    await message.answer('Временные рамки установлены', reply_markup=kb.filters)
+    await state.set_state(Form.enter_values)
 
 
 @search_router.message(Form.enter_hashtags)
