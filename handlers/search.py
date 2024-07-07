@@ -19,6 +19,22 @@ async def listen_filters(message: atp.Message, state: FSMContext):
     await message.answer('В каком чате оно было отправлено?', reply_markup=kb.select_chat)
 
 
+@search_router.message(F.text.lower() == 'назад')
+async def go_back(message: atp.Message, state: FSMContext):
+    cur_state = await state.get_state()
+    if cur_state in [
+        Form.enter_values,
+        Form.enter_username,
+        Form.enter_date,
+        Form.enter_hashtags,
+        Form.enter_text]:
+        await state.set_state(Form.enter_chat)
+        await message.answer('Выберите чат', reply_markup=kb.select_chat)
+    elif cur_state == Form.boolean_params:
+        await state.set_state(Form.enter_values)
+        await message.answer('Фильтры', reply_markup=kb.filters)
+
+
 @search_router.message(Form.enter_chat)
 async def set_chat(message: atp.Message, state: FSMContext):
     chat_id = message.chat_shared.chat_id
