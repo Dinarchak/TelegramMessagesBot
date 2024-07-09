@@ -76,9 +76,15 @@ async def set_params(message: atp.Message, state: FSMContext):
 
 @search_router.message(Form.enter_username)
 async def enter_username(message: atp.Message, state: FSMContext):
-    user = await User.get_or_none(username=message.text[1:])
+    username = None
+    for entity in message.entities:
+        if entity.type == 'mention':
+            username = message.text[entity.offset + 1:entity.offset + entity.length]
+            break
+    print(username)
+    user = await User.get_or_none(username=username)
     if user:
-        await state.update_data(enter_username=message.text[1:])
+        await state.update_data(enter_username=username)
         await message.answer(f'Сообщение было отправлено пользователем {user.first_name} {user.last_name}',
                              reply_markup=kb.filters)
     else:
