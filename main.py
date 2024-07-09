@@ -17,7 +17,7 @@ dp.include_routers(search_router, commands_router, save_message_router)
 async def main():
     await Tortoise.init(
             db_url=config['db_url'],
-            modules={'user': ['models']}
+            modules={'user': ['models.chat', 'models.hashtag', 'models.message', 'models.user']}
             )
 
     await Tortoise.generate_schemas()
