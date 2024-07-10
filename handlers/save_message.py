@@ -1,5 +1,5 @@
 from aiogram import types as atp
-from models import User, Message, Hashtag
+from models import User, Message, Hashtag, Chat
 from aiogram import Router
 
 save_message_router = Router(name='save_messages')
@@ -24,10 +24,12 @@ async def foo(message: atp.Message):
                                     username=message.from_user.username)
     message_object = await Message.create(sender=user[0],
                                           text=text_,
+                                          chat=await Chat.get(chat_id=message.chat.id),
                                           date=message.date,
                                           has_image=(message.photo is not None),
                                           has_document=(message.document is not None),
-                                          has_link=has_link_)
+                                          has_link=has_link_,
+                                          message_id=message.message_id)
 
     await message_object.hashtags.add(*hashtags_)
 

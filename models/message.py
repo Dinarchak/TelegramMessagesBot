@@ -4,6 +4,8 @@ from tortoise import fields
 
 class Message(Model):
     id = fields.IntField(primary_key=True)
+    chat = fields.ForeignKeyField(model_name='user.Chat', related_name='chat')
+    message_id = fields.IntField(unique=True)
     sender = fields.ForeignKeyField('user.User', related_name='messages')
     date = fields.DatetimeField()
     text = fields.TextField()
