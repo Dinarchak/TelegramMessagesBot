@@ -2,10 +2,13 @@ from aiogram import Router, F
 from aiogram.filters import ChatMemberUpdatedFilter, IS_NOT_MEMBER, IS_MEMBER
 from aiogram import types as atp
 from aiogram.fsm.context import FSMContext
+from tortoise.expressions import Q
 
-from models import Chat, User
+from models import Chat, User, Hashtag, Message
 from states import Form
 import keyboards as kb
+
+from settings import bot
 
 import time
 
@@ -64,6 +67,9 @@ async def set_params(message: atp.Message, state: FSMContext):
         'хештеги': (Form.enter_hashtags, 'Какие хештеги были прикреплены к сообщению?', kb.filters),
         '...': (Form.boolean_params, 'У сообщения есть дополнительные признаки?', kb.additional_filters),
     }
+
+    if message.text.lower() == 'найти сообщения':
+        await find_messages(message, state)
 
     next_state = message_state_dict.get(message.text.lower(), None)
     if next_state:
@@ -151,3 +157,57 @@ async def show_more_filters(message: atp.Message, state: FSMContext):
     if bool_filter:
         bool_filter[1](state_=state, value=True)
         await message.answer(bool_filter[2], reply_markup=kb.additional_filters)
+
+
+async def find_messages(message: atp.Message, state: FSMContext):
+    """
+    data = {
+        enter_chat: int,
+        username: str(ник пользователя),
+        enter_date: (Datetime, Datetime),
+        enter_hashtags: [string],
+        enter_text: str,
+        with_file: bool,
+        with_image: bool,
+        with_link: bool
+    }
+    """
+
+    params = {}
+
+    data = await state.get_data()
+    await state.clear()
+
+    if 'enter_username' in data:
+        params['sender'] = await User.get(username=data['enter_username'])
+
+    if 'enter_chat' in data:
+        params['chat'] = await Chat.get(chat_id=data['enter_chat'])
+
+    if 'enter_hashtags' in data:
+        params['hashtags'] = await Hashtag.filter(Q(text__in=[data['enter_hashtags']]))
+
+    if 'enter_date' in data:
+        date = data['enter_date']
+        if date[0]:
+            params['date__gt'] = date[0]
+        if date[1]:
+            params['date__lt'] = date[1]
+
+    for db_key, data_key in zip(['text', 'has_image', 'has_link', 'has_document'], ['enter_text', 'with_file', 'with_link', 'with_image']):
+        if data_key in data:
+            params[db_key] = data[data_key]
+
+    messages = await Message.filter(**params)
+
+    message_ids = []
+    for i in messages:
+        if not len(message_ids) or not len(message_ids[-1]) % 100:
+            message_ids.append([])
+        message_ids[-1].append(i.message_id)
+
+    await message.answer("Вот все сообщения, подошедшие под фильтры", reply_markup=kb.start)
+    for i in message_ids:
+        await bot.forward_messages(chat_id=message.chat.id,
+                                   from_chat_id=data['enter_chat'],
+                                   message_ids=i)
