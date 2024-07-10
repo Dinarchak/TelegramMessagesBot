@@ -5,7 +5,7 @@ class Form(StatesGroup):
     enter_chat = State()
     enter_values = State()
     boolean_params = State()
-    end = State()
+    end_ = State()
 
     enter_text = State()
     enter_username = State()

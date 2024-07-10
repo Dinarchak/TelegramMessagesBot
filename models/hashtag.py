@@ -4,4 +4,4 @@ from tortoise import fields
 
 class Hashtag(Model):
     id = fields.IntField(primary_key=True)
-    tetx = fields.CharField(max_length=255, unique=True)
+    text = fields.CharField(max_length=255, unique=True)
