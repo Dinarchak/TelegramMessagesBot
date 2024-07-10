@@ -1,17 +1,17 @@
-from aiogram import Bot, Dispatcher
+from aiogram import Dispatcher
 from tortoise import Tortoise
-from settings import config
+from settings import config, bot
 import asyncio
 
 from handlers import (save_message_router,
                       search_router,
-                      commands_router
+                      commands_router,
+                      find_messages_router
                       )
 
-bot = Bot(token=config['token'])
 dp = Dispatcher()
 
-dp.include_routers(search_router, commands_router, save_message_router)
+dp.include_routers(search_router, commands_router, save_message_router, find_messages_router)
 
 
 async def main():
