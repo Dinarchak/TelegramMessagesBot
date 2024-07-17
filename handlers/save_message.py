@@ -10,7 +10,12 @@ async def foo(message: atp.Message):
 
     text_ = '' if message.text is None else message.text
     hashtags_, has_link_ = [], False
-    entities = [] if message.entities is None else message.entities
+    entities = []
+    if message.entities:
+        entities = message.entities
+    elif message.caption_entities:
+        entities = message.caption_entities
+    
     for entity in entities:
         if entity.type == 'hashtag':
             hashtag = await Hashtag.get_or_create(text=message.text[entity.offset:entity.offset + entity.length])
