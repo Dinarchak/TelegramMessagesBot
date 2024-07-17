@@ -213,8 +213,9 @@ async def find_messages(message: atp.Message, state: FSMContext):
             message_ids.append([])
         message_ids[-1].append(i.message_id)
 
-    await message.answer("Вот все сообщения, подошедшие под фильтры", reply_markup=kb.start)
     for i in message_ids:
         await bot.forward_messages(chat_id=message.chat.id,
                                    from_chat_id=data['enter_chat'],
                                    message_ids=i)
+    await message.answer("Вот все сообщения, подошедшие под фильтры", reply_markup=kb.start)
+
