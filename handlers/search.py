@@ -156,7 +156,7 @@ async def show_more_filters(message: atp.Message, state: FSMContext):
 
     bool_filter = message_state_dict.get(message.text.lower(), None)
     if bool_filter:
-        bool_filter[1](state_=state, value=True)
+        await bool_filter[1](state_=state, value=True)
         await message.answer(bool_filter[2], reply_markup=kb.additional_filters)
 
 
