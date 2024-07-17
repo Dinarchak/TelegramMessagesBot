@@ -70,6 +70,7 @@ async def set_params(message: atp.Message, state: FSMContext):
 
     if message.text.lower() == 'найти сообщения':
         await find_messages(message, state)
+        return
 
     next_state = message_state_dict.get(message.text.lower(), None)
     if next_state:
