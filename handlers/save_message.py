@@ -18,7 +18,7 @@ async def foo(message: atp.Message):
     
     for entity in entities:
         if entity.type == 'hashtag':
-            hashtag = await Hashtag.get_or_create(text=message.text[entity.offset:entity.offset + entity.length])
+            hashtag, _ = await Hashtag.get_or_create(text=message.text[entity.offset + 1:entity.offset + entity.length])
             hashtags_.append(hashtag)
         else:
             has_link_ = has_link_ or entity.type == 'text_link'
