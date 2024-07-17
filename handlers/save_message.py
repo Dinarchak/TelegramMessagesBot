@@ -1,11 +1,11 @@
 from aiogram import types as atp
 from models import User, Message, Hashtag, Chat
-from aiogram import Router
+from aiogram import Router, F
 
 save_message_router = Router(name='save_messages')
 
 
-@save_message_router.message()
+@save_message_router.message((F.chat.type == 'supergroup') | (F.chat.type == 'group'))
 async def foo(message: atp.Message):
 
     text_ = '' if message.text is None else message.text

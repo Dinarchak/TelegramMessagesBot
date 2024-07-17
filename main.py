@@ -11,7 +11,7 @@ from handlers import (save_message_router,
 
 dp = Dispatcher()
 
-dp.include_routers(search_router, commands_router, save_message_router, find_messages_router)
+dp.include_routers(save_message_router, search_router, commands_router, find_messages_router)
 
 
 async def main():
