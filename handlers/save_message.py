@@ -35,8 +35,5 @@ async def foo(message: atp.Message):
                                           has_document=(message.document is not None),
                                           has_link=has_link_,
                                           message_id=message.message_id)
-
     await message_object.hashtags.add(*hashtags_)
-
-    if message.text:
-        await message.answer(message.text)
+    print(message.from_user.username)
