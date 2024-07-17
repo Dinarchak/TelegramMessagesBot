@@ -185,9 +185,6 @@ async def find_messages(message: atp.Message, state: FSMContext):
     if 'enter_chat' in data:
         params['chat'] = await Chat.get(chat_id=data['enter_chat'])
 
-    if 'enter_hashtags' in data:
-        params['hashtags'] = await Hashtag.filter(Q(text__in=[data['enter_hashtags']]))
-
     if 'enter_date' in data:
         date = data['enter_date']
         if date[0]:
@@ -199,7 +196,16 @@ async def find_messages(message: atp.Message, state: FSMContext):
         if data_key in data:
             params[db_key] = data[data_key]
 
-    messages = await Message.filter(**params)
+    messages = []
+
+    if 'enter_hashtags' in data:
+        hashtags = await Hashtag.filter(text__in=data['enter_hashtags'])
+
+        for tag in hashtags:
+            messages += await tag.messages.filter(**params)
+        messages = set(messages)
+    else:
+        messages = await Message.filter(**params)
 
     message_ids = []
     for i in messages:
