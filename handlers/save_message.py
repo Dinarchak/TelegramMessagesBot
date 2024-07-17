@@ -21,7 +21,7 @@ async def foo(message: atp.Message):
             hashtag, _ = await Hashtag.get_or_create(text=message.text[entity.offset + 1:entity.offset + entity.length])
             hashtags_.append(hashtag)
         else:
-            has_link_ = has_link_ or entity.type == 'text_link'
+            has_link_ = has_link_ or entity.type in ['text_link', 'url']
 
     user = await User.get_or_create(first_name=message.from_user.first_name,
                                     last_name=message.from_user.last_name,
