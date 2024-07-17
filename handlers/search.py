@@ -192,7 +192,7 @@ async def find_messages(message: atp.Message, state: FSMContext):
         if date[1]:
             params['date__lt'] = date[1]
 
-    for db_key, data_key in zip(['text', 'has_image', 'has_link', 'has_document'], ['enter_text', 'with_file', 'with_link', 'with_image']):
+    for db_key, data_key in zip(['text__contains', 'has_image', 'has_link', 'has_document'], ['enter_text', 'with_image', 'with_link', 'with_file']):
         if data_key in data:
             params[db_key] = data[data_key]
 
